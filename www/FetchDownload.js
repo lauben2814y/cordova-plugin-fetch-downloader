@@ -1,24 +1,24 @@
 var exec = require('cordova/exec');
 
-var FetchDownload = {
-    startDownload: function(url, successCallback, errorCallback) {
-        exec(successCallback, errorCallback, 'FetchDownload', 'startDownload', [url]);
+var FetchDownloader = {
+    download: function(url, path, success, error) {
+        exec(success, error, "FetchDownloader", "download", [url, path]);
     },
-    pauseDownload: function(id, successCallback, errorCallback) {
-        exec(successCallback, errorCallback, 'FetchDownload', 'pauseDownload', [id]);
+    pause: function(id, success, error) {
+        exec(success, error, "FetchDownloader", "pause", [id]);
     },
-    resumeDownload: function(id, successCallback, errorCallback) {
-        exec(successCallback, errorCallback, 'FetchDownload', 'resumeDownload', [id]);
+    resume: function(id, success, error) {
+        exec(success, error, "FetchDownloader", "resume", [id]);
     },
-    stopDownload: function(id, successCallback, errorCallback) {
-        exec(successCallback, errorCallback, 'FetchDownload', 'stopDownload', [id]);
+    cancel: function(id, success, error) {
+        exec(success, error, "FetchDownloader", "cancel", [id]);
     },
-    getDownloads: function(successCallback, errorCallback) {
-        exec(successCallback, errorCallback, 'FetchDownload', 'getDownloads', []);
+    getProgress: function(id, success, error) {
+        exec(success, error, "FetchDownloader", "getProgress", [id]);
     },
-    onProgress: function(id, progressCallback) {
-        exec(progressCallback, null, 'FetchDownload', 'onProgress', [id]);
+    restoreDownloads: function(success, error) {
+        exec(success, error, "FetchDownloader", "restoreDownloads", []);
     }
 };
 
-module.exports = FetchDownload;
+module.exports = FetchDownloader;

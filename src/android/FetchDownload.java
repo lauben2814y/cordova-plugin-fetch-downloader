@@ -1,27 +1,18 @@
-package com.example.fetchdownload;
+package com.example;
 
-import org.apache.cordova.*;
+import com.tonyofrancis.fetch2.*;
+import com.tonyofrancis.fetch2.Request;
+
+import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaPlugin;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.Context;
-import android.util.Log;
-
-import com.tonyodev.fetch2.Fetch;
-import com.tonyodev.fetch2.FetchConfiguration;
-import com.tonyodev.fetch2.Request;
-import com.tonyodev.fetch2core.Download;
-import com.tonyodev.fetch2.FetchListener;
-import com.tonyodev.fetch2.Error;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FetchDownload extends CordovaPlugin {
+public class FetchDownloader extends CordovaPlugin {
 
     private Fetch fetch;
     private Map<Integer, CallbackContext> progressCallbacks = new HashMap<>();
@@ -29,140 +20,171 @@ public class FetchDownload extends CordovaPlugin {
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
-
-        FetchConfiguration fetchConfiguration = new FetchConfiguration.Builder(cordova.getContext())
+        FetchConfiguration fetchConfiguration = new FetchConfiguration.Builder(cordova.getActivity())
                 .setDownloadConcurrentLimit(3)
                 .build();
         fetch = Fetch.Impl.getInstance(fetchConfiguration);
-
-        fetch.addListener(new FetchListener() {
-            @Override
-            public void onQueued(@NotNull Download download, boolean waitingOnNetwork) {}
-
-            @Override
-            public void onCompleted(@NotNull Download download) {
-                notifyProgress(download);
-            }
-
-            @Override
-            public void onError(@NotNull Download download, @NotNull Error error, @Nullable Throwable throwable) {
-                notifyProgress(download);
-            }
-
-            @Override
-            public void onProgress(@NotNull Download download, long etaInMilliSeconds, long downloadedBytesPerSecond) {
-                notifyProgress(download);
-            }
-
-            @Override
-            public void onPaused(@NotNull Download download) {
-                notifyProgress(download);
-            }
-
-            @Override
-            public void onResumed(@NotNull Download download) {
-                notifyProgress(download);
-            }
-
-            @Override
-            public void onCancelled(@NotNull Download download) {
-                notifyProgress(download);
-            }
-
-            @Override
-            public void onRemoved(@NotNull Download download) {}
-
-            @Override
-            public void onDeleted(@NotNull Download download) {}
-        });
+        setupFetchListener();
     }
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-        if (action.equals("startDownload")) {
-            String url = args.getString(0);
-            startDownload(url, callbackContext);
-            return true;
-        } else if (action.equals("pauseDownload")) {
-            int id = args.getInt(0);
-            pauseDownload(id, callbackContext);
-            return true;
-        } else if (action.equals("resumeDownload")) {
-            int id = args.getInt(0);
-            resumeDownload(id, callbackContext);
-            return true;
-        } else if (action.equals("stopDownload")) {
-            int id = args.getInt(0);
-            stopDownload(id, callbackContext);
-            return true;
-        } else if (action.equals("getDownloads")) {
-            getDownloads(callbackContext);
-            return true;
-        } else if (action.equals("onProgress")) {
-            int id = args.getInt(0);
-            progressCallbacks.put(id, callbackContext);
-            return true;
+        switch (action) {
+            case "download":
+                String url = args.getString(0);
+                String path = args.getString(1);
+                this.download(url, path, callbackContext);
+                return true;
+            case "pause":
+                int pauseId = args.getInt(0);
+                this.pause(pauseId, callbackContext);
+                return true;
+            case "resume":
+                int resumeId = args.getInt(0);
+                this.resume(resumeId, callbackContext);
+                return true;
+            case "cancel":
+                int cancelId = args.getInt(0);
+                this.cancel(cancelId, callbackContext);
+                return true;
+            case "getProgress":
+                int progressId = args.getInt(0);
+                this.getProgress(progressId, callbackContext);
+                return true;
+            case "restoreDownloads":
+                this.restoreDownloads(callbackContext);
+                return true;
         }
         return false;
     }
 
-    private void startDownload(String url, CallbackContext callbackContext) {
-        Request request = new Request(url, cordova.getContext().getFilesDir() + "/downloads");
+    private void download(String url, String path, final CallbackContext callbackContext) {
+        Request request = new Request(url, path);
+        request.setPriority(Priority.HIGH);
+        request.setNetworkType(NetworkType.ALL);
+
         fetch.enqueue(request, updatedRequest -> {
-            callbackContext.success(updatedRequest.getId());
-        }, error -> {
-            callbackContext.error(error.toString());
-        });
-    }
-
-    private void pauseDownload(int id, CallbackContext callbackContext) {
-        fetch.pause(id);
-        callbackContext.success();
-    }
-
-    private void resumeDownload(int id, CallbackContext callbackContext) {
-        fetch.resume(id);
-        callbackContext.success();
-    }
-
-    private void stopDownload(int id, CallbackContext callbackContext) {
-        fetch.remove(id);
-        callbackContext.success();
-    }
-
-    private void getDownloads(CallbackContext callbackContext) {
-        fetch.getDownloads(downloads -> {
-            JSONArray downloadsArray = new JSONArray();
-            for (Download download : downloads) {
-                JSONObject downloadObject = new JSONObject();
-                try {
-                    downloadObject.put("id", download.getId());
-                    downloadObject.put("url", download.getUrl());
-                    downloadObject.put("status", download.getStatus().toString());
-                    downloadObject.put("progress", download.getProgress());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                downloadsArray.put(downloadObject);
-            }
-            callbackContext.success(downloadsArray);
-        });
-    }
-
-    private void notifyProgress(Download download) {
-        CallbackContext callbackContext = progressCallbacks.get(download.getId());
-        if (callbackContext != null) {
-            JSONObject progressObject = new JSONObject();
+            progressCallbacks.put(updatedRequest.getId(), callbackContext);
             try {
-                progressObject.put("id", download.getId());
-                progressObject.put("progress", download.getProgress());
-                progressObject.put("status", download.getStatus().toString());
+                JSONObject result = new JSONObject();
+                result.put("id", updatedRequest.getId());
+                result.put("status", "enqueued");
+                callbackContext.success(result);
             } catch (JSONException e) {
-                e.printStackTrace();
+                callbackContext.error("Error creating JSON response");
             }
-            PluginResult result = new PluginResult(PluginResult.Status.OK, progressObject);
-            result.setKeepCallback(true);
-            callbackContext.sendPluginResult(result);
-        }
+        }, error -> {
+            callbackContext.error("Error: " + error.getName());
+        });
+    }
+
+    private void pause(int id, CallbackContext callbackContext) {
+        fetch.pause(id);
+        callbackContext.success("Paused download " + id);
+    }
+
+    private void resume(int id, CallbackContext callbackContext) {
+        fetch.resume(id);
+        callbackContext.success("Resumed download " + id);
+    }
+
+    private void cancel(int id, CallbackContext callbackContext) {
+        fetch.cancel(id);
+        callbackContext.success("Cancelled download " + id);
+    }
+
+    private void getProgress(int id, CallbackContext callbackContext) {
+        fetch.getDownload(id, download -> {
+            try {
+                JSONObject progress = new JSONObject();
+                progress.put("id", download.getId());
+                progress.put("status", download.getStatus().name());
+                progress.put("progress", download.getProgress());
+                progress.put("downloadedBytes", download.getDownloaded());
+                progress.put("totalBytes", download.getTotal());
+                callbackContext.success(progress);
+            } catch (JSONException e) {
+                callbackContext.error("Error creating JSON response");
+            }
+        }, error -> {
+            callbackContext.error("Error getting progress: " + error.getName());
+        });
+    }
+
+    private void restoreDownloads(CallbackContext callbackContext) {
+        fetch.getDownloads(downloads -> {
+            JSONArray restoredDownloads = new JSONArray();
+            for (Download download : downloads) {
+                try {
+                    JSONObject downloadInfo = new JSONObject();
+                    downloadInfo.put("id", download.getId());
+                    downloadInfo.put("status", download.getStatus().name());
+                    downloadInfo.put("progress", download.getProgress());
+                    restoredDownloads.put(downloadInfo);
+                } catch (JSONException e) {
+                    // Skip this download if there's an error
+                }
+            }
+            callbackContext.success(restoredDownloads);
+        }, error -> {
+            callbackContext.error("Error restoring downloads: " + error.getName());
+        });
+    }
+
+    private void setupFetchListener() {
+        fetch.addListener(new FetchListener() {
+            @Override
+            public void onProgress(@NotNull Download download, long etaInMilliSeconds, long downloadedBytesPerSecond) {
+                CallbackContext callback = progressCallbacks.get(download.getId());
+                if (callback != null) {
+                    try {
+                        JSONObject progress = new JSONObject();
+                        progress.put("id", download.getId());
+                        progress.put("status", "progress");
+                        progress.put("progress", download.getProgress());
+                        progress.put("etaInSeconds", etaInMilliSeconds / 1000);
+                        progress.put("downloadedBytesPerSecond", downloadedBytesPerSecond);
+                        PluginResult progressResult = new PluginResult(PluginResult.Status.OK, progress);
+                        progressResult.setKeepCallback(true);
+                        callback.sendPluginResult(progressResult);
+                    } catch (JSONException e) {
+                        // Ignore
+                    }
+                }
+            }
+
+            @Override
+            public void onCompleted(@NotNull Download download) {
+                CallbackContext callback = progressCallbacks.get(download.getId());
+                if (callback != null) {
+                    try {
+                        JSONObject result = new JSONObject();
+                        result.put("id", download.getId());
+                        result.put("status", "completed");
+                        callback.success(result);
+                    } catch (JSONException e) {
+                        callback.error("Error creating JSON response");
+                    }
+                    progressCallbacks.remove(download.getId());
+                }
+            }
+
+            @Override
+            public void onError(@NotNull Download download, @NotNull Error error, @Nullable Throwable throwable) {
+                CallbackContext callback = progressCallbacks.get(download.getId());
+                if (callback != null) {
+                    callback.error("Error: " + error.getName());
+                    progressCallbacks.remove(download.getId());
+                }
+            }
+
+            // Implement other methods of FetchListener as needed
+        });
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        fetch.close();
     }
 }

@@ -1,13 +1,19 @@
-<plugin id="cordova-plugin-fetch-download" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins" xmlns:android="http://schemas.android.com/apk/res/android">
-    <name>FetchDownload</name>
-    <js-module src="www/FetchDownload.js" name="FetchDownload">
-        <clobbers target="FetchDownload" />
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" id="cordova-plugin-fetch-downloader" version="0.0.1">
+    <name>Fetch Downloader</name>
+    <description>Cordova Fetch Downloader Plugin</description>
+    <license>MIT</license>
+    <keywords>cordova,download,fetch</keywords>
+    <js-module src="www/FetchDownload.js" name="FetchDownloader">
+        <clobbers target="cordova.plugins.FetchDownloader" />
     </js-module>
-
     <platform name="android">
-        <source-file src="src/android/FetchDownload.java" target-dir="src/com/example/fetchdownload" />
-         <framework src="com.github.tonyofrancis:Fetch:3.1.6" />
-         <framework src="com.google.firebase:firebase-bom:30.2.0" />
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="FetchDownloader">
+                <param name="android-package" value="com.example.FetchDownloader"/>
+            </feature>
+        </config-file>
+        <source-file src="src/android/FetchDownload.java" target-dir="src/com/example" />
+        <framework src="com.tonyofrancis.fetch2:fetch2:3.0.12" />
     </platform>
-    <hook type="after_plugin_install" src="hooks/after_plugin_install.js" />
 </plugin>
