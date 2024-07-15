@@ -1,0 +1,22 @@
+{
+    "name": "cordova-plugin-fetch-download",
+    "version": "1.0.0",
+    "description": "Cordova plugin for downloading files using Fetch with pause, resume, and progress",
+    "cordova": {
+      "id": "cordova-plugin-fetch-download",
+      "platforms": [
+        "android"
+      ]
+    },
+    "keywords": [
+      "cordova",
+      "fetch",
+      "download",
+      "pause",
+      "resume",
+      "progress"
+    ],
+    "author": "Your Name",
+    "license": "MIT"
+  }
+  
