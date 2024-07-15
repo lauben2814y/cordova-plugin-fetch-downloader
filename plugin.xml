@@ -15,6 +15,7 @@
         </config-file>
         <source-file src="src/android/FetchDownload.java" target-dir="src/com/example" />
         <framework src="com.github.tonyofrancis:Fetch:3.1.6" />
+        <framework src="androidx.tonyodev.fetch2:xfetch2:3.1.6" />
     </platform>
     <hook type="after_plugin_install" src="hooks/after_plugin_install.js" />
 </plugin>

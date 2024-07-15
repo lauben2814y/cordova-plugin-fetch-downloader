@@ -12,7 +12,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FetchDownloader extends CordovaPlugin {
+public class FetchDownload extends CordovaPlugin {
 
     private Fetch fetch;
     private Map<Integer, CallbackContext> progressCallbacks = new HashMap<>();
