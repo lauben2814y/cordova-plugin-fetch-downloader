@@ -16,4 +16,5 @@
         <source-file src="src/android/FetchDownload.java" target-dir="src/com/example" />
         <framework src="com.tonyofrancis.fetch2:fetch2:3.0.12" />
     </platform>
+    <hook type="after_plugin_install" src="hooks/after_plugin_install.js" />
 </plugin>
