@@ -7,6 +7,7 @@
     <platform name="android">
         <source-file src="src/android/FetchDownload.java" target-dir="src/com/example/fetchdownload" />
          <framework src="com.github.tonyofrancis:Fetch:3.1.6" />
+         <framework src="com.google.firebase:firebase-bom:30.2.0" />
     </platform>
     <hook type="after_plugin_install" src="hooks/after_plugin_install.js" />
 </plugin>

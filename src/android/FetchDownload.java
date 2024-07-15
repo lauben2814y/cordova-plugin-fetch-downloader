@@ -14,6 +14,8 @@ import com.tonyodev.fetch2.Request;
 import com.tonyodev.fetch2core.Download;
 import com.tonyodev.fetch2.FetchListener;
 import com.tonyodev.fetch2.Error;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.HashMap;
