@@ -6,7 +6,7 @@
 
     <platform name="android">
         <source-file src="src/android/FetchDownload.java" target-dir="src/com/example/fetchdownload" />
-        <framework src="https://github.com/tonyofrancis/Fetch.git" />
+         <framework src="com.github.tonyofrancis:Fetch:3.1.6" />
     </platform>
     <hook type="after_plugin_install" src="hooks/after_plugin_install.js" />
 </plugin>
